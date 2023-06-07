@@ -2,22 +2,72 @@ name: C/C++ CI
 
 on:
   push:
-    branches: [ "main" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "master" ]
 
 jobs:
   build:
-
-    runs-on: ubuntu-latest
-
+    runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v3
-    - name: configure
-      run: ./configure
-    - name: make
-      run: make
-    - name: make check
-      run: make check
-    - name: make distcheck
-      run: make distcheck
+    - name: Setup NASM
+      uses: ilammy/setup-nasm@v1
+    - name: Git Checkout
+      uses: actions/checkout@v2
+
+    - name: Restore CMake Cache
+      uses: actions/cache@v2
+      with:
+        path: build/
+        key: ${{ runner.os }}-cxx-${{ hashFiles('**/CMakeLists.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-cxx-
+
+    - name: Setup Build Directory
+      run: mkdir build -ea 0
+      
+    - name: Set Git Tag
+      if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+      run: |
+        if("${{ github.ref }}" -match "refs\/tags\/([0-9]+\.[0-9]+\.[0-9]+)")
+        { echo ('::set-env name=GIT_TAG::'+$matches.1) }
+    
+    - name: Update Version Resource
+      if: env.GIT_TAG != null
+      run: |
+        (((Get-Content -path src/BlockActorLib.rc -Raw) -replace "0,0,0", ("$env:GIT_TAG" -replace "\.", ",")) -replace "0\.0\.0", "$env:GIT_TAG") | Set-Content -Path src/BlockActorLib.rc
+        
+    - name: Run CMake
+      run: |
+        cmake -S . -B build
+        cmake --build build --config Release
+    - name: File Upload Setup
+      run: |
+        mkdir dev\lib; cp build\BlockActorLib.lib dev\lib\BlockActorLib.lib; mv inc dev
+        mkdir artifact; cp build\BlockActorLib.dll artifact\BlockActorLib.dll; cp build\BlockActorLib.exp artifact\BlockActorLib.exp; cp build\BlockActorLib.lib artifact\BlockActorLib.lib
+    - name: Create Development Package
+      uses: papeloto/action-zip@v1
+      with:
+        dest: BlockActorLib-dev.zip
+        files: dev/
+
+    - name: Upload Development Package
+      uses: actions/upload-artifact@v2
+      with:
+        name: BlockActorLib-dev
+        path: dev
+
+    - name: Upload x64 Build
+      uses: actions/upload-artifact@v2
+      with:
+        name: BlockActorLib
+        path: artifact
+
+    - name: Create Tagged Release
+      if: env.GIT_TAG != null
+      uses: "marvinpinto/action-automatic-releases@latest"
+      with:
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        prerelease: false
+        files: |
+          BlockActorLib-dev.zip
+          build/BlockActorLib.dll
