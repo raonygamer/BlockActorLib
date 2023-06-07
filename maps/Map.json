@@ -1,0 +1,16 @@
+{
+    "functions": [
+        {
+            "name": "?setId@BlockActor@@SAXW4BlockActorType@@AEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z",
+            "address": "0x160FCA0"
+        },
+        {
+            "name": "?initBlockEntities@BlockActor@@SAXXZ",
+            "address": "0x160FDC0"
+        },
+        {
+            "name": "?createBlockEntity@BlockActorFactory@@SA?AV?$shared_ptr@VBlockActor@@@std@@W4BlockActorType@@AEBVBlockPos@@AEBVBlockLegacy@@@Z",
+            "address": "0x160F060"
+        }
+    ]
+}
