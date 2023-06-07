@@ -68,8 +68,8 @@ target_link_libraries(${ModName}
 # generate the asm and cpp files from the symbol map(s)
 add_custom_command(
     OUTPUT "${generated_directory}/initcpp.cpp" "${generated_directory}/initasm.asm" "${generated_directory}/initcpp.h"
-    COMMAND py -3 $ENV{ZENOVA_DATA}/dev/tools/process_symbol_map.py -e -a x64 -p windows -d ${generated_directory} ${maps_directory}/*.json
-    DEPENDS $ENV{ZENOVA_DATA}/dev/tools/process_symbol_map.py ${maps_directory}/*.json
+    COMMAND py -3 D:/a/dev/tools/process_symbol_map.py -e -a x64 -p windows -d ${generated_directory} ${maps_directory}/*.json
+    DEPENDS D:/a/dev/tools/process_symbol_map.py ${maps_directory}/*.json
 )
 
 # copy the resouces to the mod folder
